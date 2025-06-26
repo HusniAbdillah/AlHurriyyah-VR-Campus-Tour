@@ -55,22 +55,8 @@ public class MapToSphereController : MonoBehaviour
     {
         // Auto-assign camera if null
         if (mainCamera == null)
-        {
             mainCamera = Camera.main;
-            Debug.Log($"Auto-assigned camera: {(mainCamera != null ? mainCamera.name : "FAILED - No main camera")}");
-            
-            // Final fallback - find any camera
-            if (mainCamera == null)
-            {
-                Camera[] allCameras = FindObjectsOfType<Camera>();
-                if (allCameras.Length > 0)
-                {
-                    mainCamera = allCameras[0];
-                    Debug.Log($"Fallback camera found: {mainCamera.name}");
-                }
-            }
-        }
-        
+
         CacheComponents();
         SetupButtonEvents();
     }
@@ -90,13 +76,7 @@ public class MapToSphereController : MonoBehaviour
 
     void Update()
     {
-        // Always update all UI positions to follow camera
-        UpdateFloatingButtonPositions();
-        
-        if (isMapOverlayVisible)
-        {
-            UpdateMapOverlayPositions();
-        }
+        // Tidak perlu update posisi UI, biarkan diatur oleh RectTransform di Canvas
     }
 
     private void CacheComponents()
@@ -213,43 +193,10 @@ public class MapToSphereController : MonoBehaviour
         // Both floating buttons always visible
         SetActive(homeButton, true);
         SetActive(playPauseButton, true);
-        
-        // Position them initially
-        UpdateFloatingButtonPositions();
+        // Tidak perlu atur posisi, biarkan diatur RectTransform di Canvas
     }
 
-    private void UpdateFloatingButtonPositions()
-    {
-        if (mainCamera == null) return;
 
-        // Home button - top right corner dengan IconFollowScreenCorner logic
-        if (homeButton != null)
-        {
-            Vector3 topRightViewport = new Vector3(0.9f, 0.9f, floatingButtonDistance);
-            Vector3 topRightWorld = mainCamera.ViewportToWorldPoint(topRightViewport);
-            
-            homeButton.transform.position = topRightWorld;
-            if (homeButton.transform.hasChanged || HasCameraMoved())
-            {
-                homeButton.transform.LookAt(mainCamera.transform.position);
-                homeButton.transform.Rotate(0, 180, 0);
-            }
-        }
-
-        // Play/pause button - bottom right corner
-        if (playPauseButton != null)
-        {
-            Vector3 bottomRightViewport = new Vector3(0.9f, 0.1f, floatingButtonDistance);
-            Vector3 bottomRightWorld = mainCamera.ViewportToWorldPoint(bottomRightViewport);
-            
-            playPauseButton.transform.position = bottomRightWorld;
-            if (playPauseButton.transform.hasChanged || HasCameraMoved())
-            {
-                playPauseButton.transform.LookAt(mainCamera.transform.position);
-                playPauseButton.transform.Rotate(0, 180, 0);
-            }
-        }
-    }
 
     private bool HasCameraMoved()
     {
@@ -265,32 +212,7 @@ public class MapToSphereController : MonoBehaviour
         return moved;
     }
 
-    private void UpdateMapOverlayPositions()
-    {
-        if (mainCamera == null) return;
 
-        // Position map and button panels consistently in front of camera
-        Vector3 cameraForward = mainCamera.transform.forward;
-        Vector3 cameraPosition = mainCamera.transform.position;
-        Vector3 uiPosition = cameraPosition + (cameraForward * uiDistanceFromCamera);
-
-        // Update map panel position (center of screen)
-        if (mapPanel != null)
-        {
-            mapPanel.transform.position = uiPosition;
-            mapPanel.transform.rotation = mainCamera.transform.rotation;
-            mapPanel.transform.localScale = Vector3.one * uiScale;
-        }
-
-        // Update button panel position (slightly below map)
-        if (buttonPanel != null)
-        {
-            Vector3 buttonPanelPos = uiPosition + (mainCamera.transform.up * -0.4f);
-            buttonPanel.transform.position = buttonPanelPos;
-            buttonPanel.transform.rotation = mainCamera.transform.rotation;
-            buttonPanel.transform.localScale = Vector3.one * uiScale;
-        }
-    }
 
     private void SetupFallbackMode()
     {
@@ -310,34 +232,30 @@ public class MapToSphereController : MonoBehaviour
         }
 
         // Debug sebelum perubahan
-        Debug.Log($"Sphere renderer null: {sphereRenderer == null}");
-        Debug.Log($"Materials array null: {sphereMaterials == null}");
-        Debug.Log($"Material at index null: {sphereMaterials[materialIndex] == null}");
+        Debug.Log($"Before change - Current material: {sphereRenderer.material?.name}");
 
-        if (sphereRenderer != null && sphereMaterials[materialIndex] != null)
+        if (sphereRenderer != null && sphereMaterials != null && materialIndex < sphereMaterials.Length && sphereMaterials[materialIndex] != null)
         {
-            Debug.Log($"Changing material from {sphereRenderer.material?.name} to {sphereMaterials[materialIndex].name}");
-            
             // Change sphere material
             sphereRenderer.material = sphereMaterials[materialIndex];
             currentMaterialIndex = materialIndex;
             
-            // Verify material changed
-            if (sphereRenderer.material == sphereMaterials[materialIndex])
-            {
-                Debug.Log($"✓ Material successfully changed to index {materialIndex}");
-            }
-            else
-            {
-                Debug.LogError($"✗ Material change failed!");
-            }
+            // Verifikasi material berdasarkan nama, bukan referensi objek
+            Debug.Log($"After change - Current material: {sphereRenderer.material?.name}");
             
             // Hide map overlay dan switch ke sphere mode
             HideMapOverlay();
+            
+            // Pastikan camera control tetap aktif
+            if (cameraControl != null)
+            {
+                cameraControl.enabled = true;
+                Debug.Log("Camera control re-enabled after material change");
+            }
         }
         else
         {
-            Debug.LogError($"Cannot change material - sphereRenderer: {sphereRenderer != null}, material: {sphereMaterials[materialIndex] != null}");
+            Debug.LogError($"Cannot change material - Missing references or null material");
         }
     }
 
@@ -422,8 +340,7 @@ public class MapToSphereController : MonoBehaviour
         // Keep sphere visible with current material as background
         SetActive(sphere, true);
 
-        // Update positions immediately
-        UpdateMapOverlayPositions();
+        // Tidak perlu update posisi, biarkan diatur RectTransform di Canvas
         
         Debug.Log($"Map overlay shown - mapPanel: {mapPanel?.activeInHierarchy}, buttonPanel: {buttonPanel?.activeInHierarchy}");
     }
