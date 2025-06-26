@@ -347,6 +347,11 @@ public class MapToSphereController : MonoBehaviour
             return;
         }
         
+        // PERBAIKAN: Simpan index yang dipilih SEBELUM memanipulasi sphere objects
+        // Ini memastikan state tetap konsisten di seluruh aplikasi
+        currentSphereIndex = sphereIndex;
+        Debug.Log($"Current sphere index updated to: {currentSphereIndex}");
+        
         // Cetak status sphere objects untuk debugging
         Debug.Log("Current state before switch:");
         for (int i = 0; i < Mathf.Min(sphereObjects.Length, 3); i++)
@@ -357,40 +362,64 @@ public class MapToSphereController : MonoBehaviour
             }
         }
         
-        // Sembunyikan SEMUA sphere
+        // PERBAIKAN: Pertama, set state yang benar untuk SEMUA sphere objects
+        UpdateAllSphereVisibility();
+        
+        // Sembunyikan UI map
+        HideMapOverlay();
+        
+        // Pastikan camera control aktif
+        if (cameraControl != null)
+        {
+            cameraControl.enabled = true;
+            Debug.Log("Camera control activated");
+        }
+        
+        Debug.Log($"Successfully switched to sphere {sphereIndex}");
+        Debug.Log("=======================================");
+    }
+
+    // FUNGSI BARU: Memastikan hanya sphere yang dipilih yang terlihat
+    private void UpdateAllSphereVisibility()
+    {
+        if (sphereObjects == null || sphereObjects.Length == 0)
+            return;
+        
+        // Log di awal untuk debugging
+        Debug.Log($"UpdateAllSphereVisibility - Ensuring sphere {currentSphereIndex} is visible");
+        
+        // Validasi index
+        if (currentSphereIndex < 0 || currentSphereIndex >= sphereObjects.Length)
+        {
+            Debug.LogError($"Invalid currentSphereIndex: {currentSphereIndex}. Setting to 0.");
+            currentSphereIndex = 0;
+        }
+        
+        // Satu loop untuk deaktivasi semua terlebih dahulu
         for (int i = 0; i < sphereObjects.Length; i++)
         {
-            if (sphereObjects[i] != null)
+            if (sphereObjects[i] != null && i != currentSphereIndex)
             {
                 sphereObjects[i].SetActive(false);
             }
         }
         
-        // Aktifkan sphere yang dipilih
-        if (sphereObjects[sphereIndex] != null)
+        // Kemudian satu perintah terpisah untuk aktivasi yang dipilih
+        if (sphereObjects[currentSphereIndex] != null)
         {
-            Debug.Log($"Activating sphere {sphereIndex}: {sphereObjects[sphereIndex].name}");
-            sphereObjects[sphereIndex].SetActive(true);
-            currentSphereIndex = sphereIndex;
-            
-            // Sembunyikan UI map
-            HideMapOverlay();
-            
-            // Pastikan camera control aktif
-            if (cameraControl != null)
-            {
-                cameraControl.enabled = true;
-                Debug.Log("Camera control activated");
-            }
-            
-            Debug.Log($"Successfully switched to sphere {sphereIndex}");
+            sphereObjects[currentSphereIndex].SetActive(true);
+            Debug.Log($"Sphere {currentSphereIndex} ({sphereObjects[currentSphereIndex].name}) activated");
         }
         else
         {
-            Debug.LogError($"ERROR: Sphere at index {sphereIndex} is null!");
+            Debug.LogError($"Selected sphere at index {currentSphereIndex} is null!");
         }
         
-        Debug.Log("=======================================");
+        // Pastikan sphere original tidak aktif
+        if (sphere != null)
+        {
+            sphere.SetActive(false);
+        }
     }
 
     public void OnHomeButtonClick()
@@ -578,7 +607,10 @@ public class MapToSphereController : MonoBehaviour
         SetActive(buttonPanel, false);
         SetActive(sphereUI, true);
         
-        Debug.Log("Map overlay hidden - full sphere view");
+        // PERBAIKAN PENTING: Pastikan sphere yang benar tetap aktif
+        UpdateAllSphereVisibility();
+        
+        Debug.Log($"Map overlay hidden - Now showing sphere {currentSphereIndex}");
     }
 
     private void SetActive(GameObject obj, bool active)
@@ -825,23 +857,6 @@ public class MapToSphereController : MonoBehaviour
                 }
             }
             currentSphereIndex = 0;
-        }
-        
-        // Pastikan image icon home juga terhubung
-        if (homeButtonImage != null && homeButtonImage.gameObject != homeButton)
-        {
-            // Dapatkan atau tambahkan Button component
-            Button imgButton = homeButtonImage.gameObject.GetComponent<Button>();
-            if (imgButton == null)
-            {
-                imgButton = homeButtonImage.gameObject.AddComponent<Button>();
-            }
-            
-            // Setup onClick event
-            imgButton.onClick.RemoveAllListeners();
-            imgButton.onClick.AddListener(OnHomeButtonClick);
-            
-            Debug.Log("Home icon image connected via EmergencySetup");
         }
         
         Debug.Log("Emergency setup complete - UI should now be functional");
