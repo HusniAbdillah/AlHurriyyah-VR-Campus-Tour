@@ -12,6 +12,10 @@ public class MapToSphereController : MonoBehaviour
     [Header("Sphere Settings")]
     public GameObject sphere;
     public Material[] sphereMaterials;
+    
+    [Header("Multiple Sphere Objects")]
+    public GameObject[] sphereObjects; // Assign 11 sphere objects di Inspector, masing-masing dengan material berbeda
+    private int currentSphereIndex = 0;
 
     [Header("Camera Settings")]
     public Camera mainCamera;
@@ -65,12 +69,54 @@ public class MapToSphereController : MonoBehaviour
     {
         try
         {
+            // Auto-setup sphere objects jika belum ada
+            if (sphereObjects == null || sphereObjects.Length == 0)
+            {
+                Debug.Log("Auto-creating sphere objects from materials...");
+                SetupTestSpheres();
+            }
+            
             InitializeApp();
+            
+            // Pastikan home button berfungsi
+            Invoke("VerifyButtonsSetup", 0.5f);
         }
         catch (System.Exception e)
         {
             Debug.LogError("Scene setup error: " + e.Message);
             SetupFallbackMode();
+        }
+    }
+    
+    // Fungsi untuk memastikan button events terhubung dengan benar
+    private void VerifyButtonsSetup()
+    {
+        Debug.Log("Verifying button setup...");
+        
+        // Pastikan home button terhubung
+        if (homeButton != null && homeButtonComponent == null)
+        {
+            homeButtonComponent = homeButton.GetComponent<Button>();
+            if (homeButtonComponent != null)
+            {
+                homeButtonComponent.onClick.RemoveAllListeners();
+                homeButtonComponent.onClick.AddListener(OnHomeButtonClick);
+                Debug.Log("Home button connected via verification");
+            }
+        }
+        
+        // Pastikan juga button-button di button panel terhubung dengan benar
+        if (buttonPanel != null && buttonPanel.activeInHierarchy)
+        {
+            Button[] panelButtons = buttonPanel.GetComponentsInChildren<Button>(true);
+            Debug.Log($"Found {panelButtons.Length} buttons in panel");
+            
+            // Aktifkan semua button
+            foreach (Button btn in panelButtons)
+            {
+                btn.gameObject.SetActive(true);
+                btn.interactable = true;
+            }
         }
     }
 
@@ -140,11 +186,33 @@ public class MapToSphereController : MonoBehaviour
 
     private void SetupButtonEvents()
     {
+        Debug.Log("=== Setting up button events ===");
+        
         // Setup home button click event
         if (homeButtonComponent != null)
         {
             homeButtonComponent.onClick.RemoveAllListeners();
             homeButtonComponent.onClick.AddListener(OnHomeButtonClick);
+            Debug.Log("Home button click event registered successfully");
+        }
+        else if (homeButton != null)
+        {
+            // Fallback jika component belum di-cache
+            homeButtonComponent = homeButton.GetComponent<Button>();
+            if (homeButtonComponent != null)
+            {
+                homeButtonComponent.onClick.RemoveAllListeners();
+                homeButtonComponent.onClick.AddListener(OnHomeButtonClick);
+                Debug.Log("Home button click event registered via fallback");
+            }
+            else
+            {
+                Debug.LogError("CRITICAL: Home button doesn't have Button component!");
+            }
+        }
+        else
+        {
+            Debug.LogError("CRITICAL: Home button GameObject is NULL!");
         }
 
         // Setup play/pause button click event
@@ -152,24 +220,57 @@ public class MapToSphereController : MonoBehaviour
         {
             playPauseButtonComponent.onClick.RemoveAllListeners();
             playPauseButtonComponent.onClick.AddListener(OnPlayPauseClick);
+            Debug.Log("Play/Pause button click event registered");
         }
+        else if (playPauseButton != null)
+        {
+            playPauseButtonComponent = playPauseButton.GetComponent<Button>();
+            if (playPauseButtonComponent != null)
+            {
+                playPauseButtonComponent.onClick.RemoveAllListeners();
+                playPauseButtonComponent.onClick.AddListener(OnPlayPauseClick);
+                Debug.Log("Play/Pause button click event registered via fallback");
+            }
+        }
+        
+        Debug.Log("==============================");
     }
 
     private void InitializeApp()
     {
         Debug.Log("=== Initializing App ===");
         
-        // Set initial material (material 0)
-        if (sphereRenderer != null && sphereMaterials != null && sphereMaterials.Length > 0)
+        // Inisialisasi dengan pendekatan toggle sphere objects
+        if (sphereObjects != null && sphereObjects.Length > 0)
         {
-            Debug.Log($"Setting initial material: {sphereMaterials[0]?.name ?? "NULL"}");
+            // Sembunyikan semua sphere kecuali yang pertama
+            for (int i = 0; i < sphereObjects.Length; i++)
+            {
+                if (sphereObjects[i] != null)
+                {
+                    SetActive(sphereObjects[i], i == 0); // Aktifkan hanya sphere pertama
+                }
+            }
+            currentSphereIndex = 0;
+            Debug.Log($"Initial sphere set to index 0");
+            
+            // Tetap support material legacy jika diperlukan
+            if (sphereRenderer != null && sphereMaterials != null && sphereMaterials.Length > 0)
+            {
+                Debug.Log($"Legacy material system also initialized");
+            }
+        }
+        else if (sphereRenderer != null && sphereMaterials != null && sphereMaterials.Length > 0)
+        {
+            // Fallback ke sistem material lama jika tidak ada sphereObjects
+            Debug.Log($"Using legacy material system: {sphereMaterials[0]?.name ?? "NULL"}");
             sphereRenderer.material = sphereMaterials[0];
             currentMaterialIndex = 0;
             Debug.Log($"Initial material set to: {sphereRenderer.material?.name}");
         }
         else
         {
-            Debug.LogError("Cannot set initial material - missing references!");
+            Debug.LogError("Cannot initialize any sphere system - missing references!");
         }
 
         // Show map overlay initially
@@ -221,49 +322,154 @@ public class MapToSphereController : MonoBehaviour
     }
 
     // Public methods untuk UI callbacks dari 11 button
-    public void OnButtonClick(int materialIndex)
+    public void OnButtonClick(int sphereIndex)
     {
-        Debug.Log($"OnButtonClick called with index: {materialIndex}");
+        Debug.Log($"=== OnButtonClick called with index: {sphereIndex} ===");
         
-        if (!IsValidMaterialIndex(materialIndex)) 
+        // Periksa array sphereObjects
+        if (sphereObjects == null || sphereObjects.Length == 0)
         {
-            Debug.LogError($"Invalid material index: {materialIndex}");
+            Debug.LogError("Sphere objects array is empty. Setting up spheres now...");
+            SetupTestSpheres();
+            
+            // Periksa lagi setelah setup
+            if (sphereObjects == null || sphereObjects.Length == 0)
+            {
+                Debug.LogError("Failed to create sphere objects. Cannot continue.");
+                return;
+            }
+        }
+        
+        // Validasi index
+        if (sphereIndex < 0 || sphereIndex >= sphereObjects.Length)
+        {
+            Debug.LogError($"Invalid sphere index: {sphereIndex}. Valid range: 0-{sphereObjects.Length-1}");
             return;
         }
-
-        // Debug sebelum perubahan
-        Debug.Log($"Before change - Current material: {sphereRenderer.material?.name}");
-
-        if (sphereRenderer != null && sphereMaterials != null && materialIndex < sphereMaterials.Length && sphereMaterials[materialIndex] != null)
+        
+        // Cetak status sphere objects untuk debugging
+        Debug.Log("Current state before switch:");
+        for (int i = 0; i < Mathf.Min(sphereObjects.Length, 3); i++)
         {
-            // Change sphere material
-            sphereRenderer.material = sphereMaterials[materialIndex];
-            currentMaterialIndex = materialIndex;
+            if (sphereObjects[i] != null)
+            {
+                Debug.Log($"Sphere[{i}]: {sphereObjects[i].name} - Active: {sphereObjects[i].activeInHierarchy}");
+            }
+        }
+        
+        // Sembunyikan SEMUA sphere
+        for (int i = 0; i < sphereObjects.Length; i++)
+        {
+            if (sphereObjects[i] != null)
+            {
+                sphereObjects[i].SetActive(false);
+            }
+        }
+        
+        // Aktifkan sphere yang dipilih
+        if (sphereObjects[sphereIndex] != null)
+        {
+            Debug.Log($"Activating sphere {sphereIndex}: {sphereObjects[sphereIndex].name}");
+            sphereObjects[sphereIndex].SetActive(true);
+            currentSphereIndex = sphereIndex;
             
-            // Verifikasi material berdasarkan nama, bukan referensi objek
-            Debug.Log($"After change - Current material: {sphereRenderer.material?.name}");
-            
-            // Hide map overlay dan switch ke sphere mode
+            // Sembunyikan UI map
             HideMapOverlay();
             
-            // Pastikan camera control tetap aktif
+            // Pastikan camera control aktif
             if (cameraControl != null)
             {
                 cameraControl.enabled = true;
-                Debug.Log("Camera control re-enabled after material change");
+                Debug.Log("Camera control activated");
             }
+            
+            Debug.Log($"Successfully switched to sphere {sphereIndex}");
         }
         else
         {
-            Debug.LogError($"Cannot change material - Missing references or null material");
+            Debug.LogError($"ERROR: Sphere at index {sphereIndex} is null!");
         }
+        
+        Debug.Log("=======================================");
     }
 
     public void OnHomeButtonClick()
     {
-        // Always show map overlay when home is clicked
-        ShowMapOverlay();
-        Debug.Log("Home button clicked - Map overlay shown");
+        Debug.Log("=== Home button clicked - Showing map and navigation buttons ===");
+        
+        // Pastikan UI map dan button terlihat
+        isMapOverlayVisible = true;
+        
+        // Aktifkan map panel
+        if (mapPanel != null)
+        {
+            mapPanel.SetActive(true);
+            Debug.Log("Map panel activated");
+        }
+        else
+        {
+            Debug.LogError("Map panel is NULL!");
+        }
+        
+        // Aktifkan button panel dan semua button di dalamnya
+        if (buttonPanel != null)
+        {
+            buttonPanel.SetActive(true);
+            Debug.Log("Button panel activated");
+            
+            // Aktifkan semua button di panel
+            Button[] buttons = buttonPanel.GetComponentsInChildren<Button>(true);
+            foreach (Button btn in buttons)
+            {
+                btn.gameObject.SetActive(true);
+                btn.interactable = true;
+            }
+            Debug.Log($"Activated {buttons.Length} buttons in button panel");
+        }
+        else
+        {
+            Debug.LogError("Button panel is NULL! Cannot show navigation buttons.");
+        }
+        
+        // Sembunyikan sphereUI
+        if (sphereUI != null)
+        {
+            sphereUI.SetActive(false);
+            Debug.Log("Sphere UI hidden");
+        }
+        
+        // Pastikan sphere yang aktif tetap terlihat sebagai background
+        if (sphereObjects != null && sphereObjects.Length > 0)
+        {
+            bool anySphereVisible = false;
+            
+            // Hanya tampilkan sphere yang sedang aktif
+            for (int i = 0; i < sphereObjects.Length; i++)
+            {
+                if (sphereObjects[i] != null)
+                {
+                    bool shouldBeActive = (i == currentSphereIndex);
+                    sphereObjects[i].SetActive(shouldBeActive);
+                    if (shouldBeActive) anySphereVisible = true;
+                }
+            }
+            
+            // Jika tidak ada sphere yang aktif, aktifkan yang pertama
+            if (!anySphereVisible && sphereObjects.Length > 0 && sphereObjects[0] != null)
+            {
+                sphereObjects[0].SetActive(true);
+                currentSphereIndex = 0;
+                Debug.Log("No active sphere found, activating first sphere");
+            }
+        }
+        else if (sphere != null)
+        {
+            // Fallback ke sphere tunggal jika tidak ada array
+            sphere.SetActive(true);
+            Debug.Log("Using single sphere as fallback");
+        }
+        
+        Debug.Log("Home button click handled successfully");
     }
 
     public void OnPlayPauseClick()
@@ -337,9 +543,25 @@ public class MapToSphereController : MonoBehaviour
         SetActive(buttonPanel, true);
         SetActive(sphereUI, false);
 
-        // Keep sphere visible with current material as background
-        SetActive(sphere, true);
-
+        // Keep sphere visible (old or new system)
+        if (sphereObjects != null && currentSphereIndex >= 0 && currentSphereIndex < sphereObjects.Length)
+        {
+            // New toggle system - keep current sphere visible as background
+            for (int i = 0; i < sphereObjects.Length; i++)
+            {
+                if (sphereObjects[i] != null)
+                {
+                    // Hanya aktifkan sphere yang sedang aktif
+                    SetActive(sphereObjects[i], i == currentSphereIndex);
+                }
+            }
+        }
+        else if (sphere != null)
+        {
+            // Legacy system - keep single sphere visible
+            SetActive(sphere, true);
+        }
+        
         // Tidak perlu update posisi, biarkan diatur RectTransform di Canvas
         
         Debug.Log($"Map overlay shown - mapPanel: {mapPanel?.activeInHierarchy}, buttonPanel: {buttonPanel?.activeInHierarchy}");
@@ -355,9 +577,6 @@ public class MapToSphereController : MonoBehaviour
         SetActive(mapPanel, false);
         SetActive(buttonPanel, false);
         SetActive(sphereUI, true);
-
-        // Show sphere with current material (full view)
-        SetActive(sphere, true);
         
         Debug.Log("Map overlay hidden - full sphere view");
     }
@@ -437,6 +656,36 @@ public class MapToSphereController : MonoBehaviour
         OnButtonClick(1);
     }
 
+    [ContextMenu("Debug Sphere Toggle System")]
+    private void DebugSphereToggleSystem()
+    {
+        Debug.Log("=== SPHERE TOGGLE SYSTEM DEBUG ===");
+        Debug.Log($"Sphere Objects array: {(sphereObjects == null ? "NULL" : $"Length: {sphereObjects.Length}")}");
+        
+        if (sphereObjects != null)
+        {
+            Debug.Log($"Current active sphere index: {currentSphereIndex}");
+            
+            for (int i = 0; i < sphereObjects.Length; i++)
+            {
+                GameObject obj = sphereObjects[i];
+                string status = obj == null ? "NULL" : (obj.activeInHierarchy ? "ACTIVE" : "inactive");
+                Debug.Log($"Sphere [{i}]: {(obj == null ? "NULL" : obj.name)} - {status}");
+                
+                if (obj != null)
+                {
+                    Renderer r = obj.GetComponent<Renderer>();
+                    if (r != null)
+                    {
+                        Debug.Log($"  Material: {r.material?.name ?? "NULL"}");
+                    }
+                }
+            }
+        }
+        
+        Debug.Log("============================");
+    }
+
     [ContextMenu("Debug UI State")]
     private void DebugUIState()
     {
@@ -446,5 +695,156 @@ public class MapToSphereController : MonoBehaviour
         Debug.Log($"buttonPanel: {(buttonPanel == null ? "NULL" : $"Active: {buttonPanel.activeInHierarchy}")}");
         Debug.Log($"sphere: {(sphere == null ? "NULL" : $"Active: {sphere.activeInHierarchy}")}");
         Debug.Log("=====================");
+    }
+    
+    [ContextMenu("Setup Test Spheres")]
+    private void SetupTestSpheres()
+    {
+        // Fungsi untuk setup sphere objects dari sphere utama
+        if (sphere == null)
+        {
+            Debug.LogError("Cannot setup test spheres - main sphere is NULL!");
+            return;
+        }
+        
+        if (sphereMaterials == null || sphereMaterials.Length == 0)
+        {
+            Debug.LogError("Cannot setup test spheres - materials array is empty or NULL!");
+            return;
+        }
+        
+        Debug.Log("=== Creating test spheres from main sphere... ===");
+        
+        // Buat array dengan ukuran yang sesuai
+        sphereObjects = new GameObject[sphereMaterials.Length];
+        
+        // Buat duplicate sphere untuk setiap material
+        for (int i = 0; i < sphereMaterials.Length; i++)
+        {
+            // Hapus sphere lama jika ada
+            if (sphereObjects[i] != null)
+            {
+                DestroyImmediate(sphereObjects[i]);
+            }
+            
+            // Buat clone baru
+            sphereObjects[i] = Instantiate(sphere, sphere.transform.position, sphere.transform.rotation);
+            sphereObjects[i].name = $"Sphere_{i}";
+            
+            // Atur parent sama dengan sphere utama
+            sphereObjects[i].transform.parent = sphere.transform.parent;
+            
+            // Set material
+            Renderer r = sphereObjects[i].GetComponent<Renderer>();
+            if (r != null && sphereMaterials[i] != null)
+            {
+                r.sharedMaterial = sphereMaterials[i];
+                Debug.Log($"Sphere_{i} created with material: {sphereMaterials[i].name}");
+            }
+            else
+            {
+                Debug.LogWarning($"Issues with Sphere_{i} - Renderer: {r != null}, Material: {sphereMaterials[i] != null}");
+            }
+            
+            // Sembunyikan semua sphere kecuali yang pertama
+            sphereObjects[i].SetActive(i == 0);
+        }
+        
+        // Set sphere indeks pertama sebagai aktif
+        currentSphereIndex = 0;
+        
+        // Sembunyikan sphere utama
+        sphere.SetActive(false);
+        
+        Debug.Log($"Created {sphereObjects.Length} test spheres successfully");
+        Debug.Log("========================================");
+    }
+
+    [ContextMenu("Emergency Setup")]
+    private void EmergencySetup()
+    {
+        Debug.Log("=== EMERGENCY SETUP RUNNING ===");
+        
+        // 1. Pastikan sphere objects ada
+        SetupTestSpheres();
+        
+        // 2. Pastikan button events terhubung
+        if (homeButton != null)
+        {
+            homeButtonComponent = homeButton.GetComponent<Button>();
+            if (homeButtonComponent != null)
+            {
+                homeButtonComponent.onClick.RemoveAllListeners();
+                homeButtonComponent.onClick.AddListener(OnHomeButtonClick);
+                Debug.Log("Home button connected via emergency setup");
+            }
+        }
+        
+        // 3. Aktifkan UI map dan button
+        if (mapPanel != null) mapPanel.SetActive(true);
+        if (buttonPanel != null) buttonPanel.SetActive(true);
+        if (sphereUI != null) sphereUI.SetActive(false);
+        
+        // 4. Pastikan semua button di button panel terhubung ke OnButtonClick
+        if (buttonPanel != null)
+        {
+            Button[] buttons = buttonPanel.GetComponentsInChildren<Button>(true);
+            Debug.Log($"Found {buttons.Length} buttons in panel");
+            
+            // Aktifkan semua button
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                Button btn = buttons[i];
+                if (btn != null)
+                {
+                    btn.gameObject.SetActive(true);
+                    btn.interactable = true;
+                    
+                    // Tambahkan index ke nama button untuk identifikasi mudah
+                    btn.name = $"Button_{i}";
+                    
+                    // Hapus listener lama dan tambahkan yang baru dengan index yang benar
+                    btn.onClick.RemoveAllListeners();
+                    
+                    int index = i; // Capture index dalam closure
+                    btn.onClick.AddListener(() => OnButtonClick(index));
+                    
+                    Debug.Log($"Button {i} setup with OnButtonClick({i})");
+                }
+            }
+        }
+        
+        // 5. Aktifkan sphere pertama
+        if (sphereObjects != null && sphereObjects.Length > 0)
+        {
+            for (int i = 0; i < sphereObjects.Length; i++)
+            {
+                if (sphereObjects[i] != null)
+                {
+                    sphereObjects[i].SetActive(i == 0);
+                }
+            }
+            currentSphereIndex = 0;
+        }
+        
+        // Pastikan image icon home juga terhubung
+        if (homeButtonImage != null && homeButtonImage.gameObject != homeButton)
+        {
+            // Dapatkan atau tambahkan Button component
+            Button imgButton = homeButtonImage.gameObject.GetComponent<Button>();
+            if (imgButton == null)
+            {
+                imgButton = homeButtonImage.gameObject.AddComponent<Button>();
+            }
+            
+            // Setup onClick event
+            imgButton.onClick.RemoveAllListeners();
+            imgButton.onClick.AddListener(OnHomeButtonClick);
+            
+            Debug.Log("Home icon image connected via EmergencySetup");
+        }
+        
+        Debug.Log("Emergency setup complete - UI should now be functional");
+        Debug.Log("====================================");
     }
 }
