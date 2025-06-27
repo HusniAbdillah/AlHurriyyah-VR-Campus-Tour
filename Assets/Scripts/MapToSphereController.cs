@@ -14,13 +14,9 @@ public class MapToSphereController : MonoBehaviour
     public Button narationButton;
     private bool isNarationVisible = false;
 
-    [Header("Exit Button Settings")]
-    public GameObject exitButton;
-    public float exitButtonX = -20f;
-    public float exitButtonY = -20f;
-    public Vector2 exitButtonSize = new Vector2(80, 40);
-    private Button exitButtonComponent;
-
+    [Header("Exit Button")]
+    public Button exitButton;
+    
     [Header("Sphere Settings")]
     public GameObject sphere;
     public Material[] sphereMaterials;
@@ -70,16 +66,8 @@ public class MapToSphereController : MonoBehaviour
         if (mainCamera == null)
             mainCamera = Camera.main;
 
-        try
-        {
-            CacheComponents();
-            SetupButtonEvents();
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError("Error in Awake: " + e.Message);
-            Invoke("EmergencySetup", 0.1f);
-        }
+        CacheComponents();
+        SetupButtonEvents();
     }
 
     void Start()
@@ -89,18 +77,11 @@ public class MapToSphereController : MonoBehaviour
             if (sphereObjects == null || sphereObjects.Length == 0)
                 SetupTestSpheres();
             
-            // Ubah alur inisialisasi
-            SetupBasicComponents();      // Setup komponen dasar tanpa mengubah UI visibility
+            InitializeApp();
             Invoke("VerifyButtonsSetup", 0.5f);
             
-            // Setup floating buttons (narration and exit)
-            SetupFloatingButtons();
-            
-            // Update posisi tombol Exit setelah semua setup
-            Invoke("UpdateExitButtonPosition", 0.2f);
-            
-            // Tampilkan narasi di AKHIR process start
-            Invoke("ShowNaration", 0.3f); // Delay sedikit untuk memastikan semua setup selesai
+            // Tampilkan narasi saat aplikasi dimulai
+            ShowNaration();
         }
         catch (System.Exception e)
         {
@@ -111,22 +92,6 @@ public class MapToSphereController : MonoBehaviour
     
     private void VerifyButtonsSetup()
     {
-        bool allButtonsSetup = true;
-
-        // Check if exit button is setup
-        if (exitButtonComponent != null && exitButtonComponent.onClick.GetPersistentEventCount() == 0)
-        {
-            Debug.LogWarning("Exit button event is not set up correctly!");
-            allButtonsSetup = false;
-        }
-
-        // Check if narration button is setup
-        if (narationButton != null && narationButton.onClick.GetPersistentEventCount() == 0)
-        {
-            Debug.LogWarning("Narration button event is not set up correctly!");
-            allButtonsSetup = false;
-        }
-        
         if (homeButton != null && homeButtonComponent == null)
         {
             homeButtonComponent = homeButton.GetComponent<Button>();
@@ -147,18 +112,8 @@ public class MapToSphereController : MonoBehaviour
         // Verifikasi exit button
         if (exitButton != null)
         {
-            if (exitButton.GetComponent<Button>() == null)
-            {
-                exitButtonComponent = exitButton.AddComponent<Button>();
-                Debug.Log("Added Button component to Exit Button in VerifyButtonsSetup");
-            }
-            else
-            {
-                exitButtonComponent = exitButton.GetComponent<Button>();
-            }
-            
-            exitButtonComponent.onClick.RemoveAllListeners();
-            exitButtonComponent.onClick.AddListener(OnExitButtonClick);
+            exitButton.onClick.RemoveAllListeners();
+            exitButton.onClick.AddListener(ExitApplication);
         }
         
         if (buttonPanel != null && buttonPanel.activeInHierarchy)
@@ -171,66 +126,10 @@ public class MapToSphereController : MonoBehaviour
                 btn.interactable = true;
             }
         }
-        
-        if (!allButtonsSetup)
-        {
-            Debug.LogWarning("Some buttons are not set up correctly. Running emergency setup...");
-            EmergencySetup();
-        }
     }
 
     private void CacheComponents()
     {
-        if (mapPanel == null)
-        {
-            Debug.LogError("Map Panel is not assigned!");
-        }
-
-        if (buttonPanel == null)
-        {
-            Debug.LogError("Button Panel is not assigned!");
-        }
-
-        if (sphereObjects == null || sphereObjects.Length == 0)
-        {
-            Debug.LogError("Sphere Objects are not assigned!");
-        }
-
-        if (narationPanel == null)
-        {
-            Debug.LogWarning("Naration Panel is not assigned!");
-        }
-
-        if (narationButton == null)
-        {
-            Debug.LogWarning("Naration Button is not assigned!");
-        }
-
-        if (exitButton == null)
-        {
-            Debug.LogWarning("Exit Button is not assigned!");
-        }
-        else
-        {
-            exitButtonComponent = exitButton.GetComponent<Button>();
-            if (exitButtonComponent == null)
-            {
-                Debug.LogWarning("Exit Button does not have a Button component! Adding one automatically...");
-                exitButtonComponent = exitButton.AddComponent<Button>();
-                
-                // Set default colors
-                ColorBlock colors = exitButtonComponent.colors;
-                colors.normalColor = Color.white;
-                colors.highlightedColor = new Color(1f, 0.5f, 0.5f, 1f);
-                exitButtonComponent.colors = colors;
-                
-                // Setup onClick event
-                exitButtonComponent.onClick.AddListener(OnExitButtonClick);
-                
-                Debug.Log("Button component added to Exit Button automatically");
-            }
-        }
-
         if (homeButton != null)
         {
             homeButtonImage = homeButton.GetComponent<Image>();
@@ -249,8 +148,6 @@ public class MapToSphereController : MonoBehaviour
             playPauseButtonComponent = playPauseButton.GetComponent<Button>();
             playPauseButtonText = playPauseButton.GetComponentInChildren<TextMeshProUGUI>();
         }
-        
-        // Cache exit button component adalah duplikat dan perlu dihapus
 
         if (sphere != null)
         {
@@ -298,74 +195,11 @@ public class MapToSphereController : MonoBehaviour
         }
         
         // Setup event untuk exit button
-        if (exitButtonComponent != null)
+        if (exitButton != null)
         {
-            exitButtonComponent.onClick.RemoveAllListeners();
-            exitButtonComponent.onClick.AddListener(OnExitButtonClick);
+            exitButton.onClick.RemoveAllListeners();
+            exitButton.onClick.AddListener(ExitApplication);
         }
-        else if (exitButton != null)
-        {
-            exitButtonComponent = exitButton.GetComponent<Button>();
-            if (exitButtonComponent == null)
-            {
-                exitButtonComponent = exitButton.AddComponent<Button>();
-                // Set default colors
-                ColorBlock colors = exitButtonComponent.colors;
-                colors.normalColor = Color.white;
-                colors.highlightedColor = new Color(1f, 0.5f, 0.5f, 1f);
-                exitButtonComponent.colors = colors;
-                Debug.Log("Added Button component to Exit Button in SetupButtonEvents");
-            }
-            
-            exitButtonComponent.onClick.RemoveAllListeners();
-            exitButtonComponent.onClick.AddListener(OnExitButtonClick);
-        }
-    }
-
-    private void SetupBasicComponents()
-    {
-        if (sphereObjects != null && sphereObjects.Length > 0)
-        {
-            for (int i = 0; i < sphereObjects.Length; i++)
-            {
-                if (sphereObjects[i] != null)
-                {
-                    SetActive(sphereObjects[i], i == 0);
-                }
-            }
-            currentSphereIndex = 0;
-        }
-        else if (sphereRenderer != null && sphereMaterials != null && sphereMaterials.Length > 0)
-        {
-            sphereRenderer.material = sphereMaterials[0];
-            currentMaterialIndex = 0;
-        }
-
-        // Sembunyikan UI panels saat inisialisasi (TANPA mengaktifkan map overlay)
-        if (mapPanel != null)
-        {
-            mapPanel.SetActive(false);
-        }
-        
-        if (buttonPanel != null)
-        {
-            buttonPanel.SetActive(false);
-        }
-        
-        if (sphereUI != null)
-        {
-            sphereUI.SetActive(false);
-        }
-        
-        if (narationPanel != null)
-        {
-            // Jangan aktifkan/nonaktifkan di sini, karena akan dilakukan di ShowNaration()
-        }
-
-        UpdatePlayPauseButton();
-
-        if (cameraControl != null)
-            cameraControl.enabled = true;
     }
 
     private void InitializeApp()
@@ -403,26 +237,8 @@ public class MapToSphereController : MonoBehaviour
 
     private void SetupFloatingButtons()
     {
-        // Setup exit button position
-        if (exitButton != null)
-        {
-            RectTransform exitRectTransform = exitButton.GetComponent<RectTransform>();
-            if (exitRectTransform != null)
-            {
-                // Position exit button in the top right corner
-                exitRectTransform.anchorMin = new Vector2(1, 1);
-                exitRectTransform.anchorMax = new Vector2(1, 1);
-                exitRectTransform.pivot = new Vector2(1, 1);
-                exitRectTransform.anchoredPosition = new Vector2(exitButtonX, exitButtonY);
-                exitRectTransform.sizeDelta = exitButtonSize;
-            }
-        }
-
         SetActive(homeButton, true);
         SetActive(playPauseButton, true);
-        
-        // Pastikan exit button selalu terlihat
-        SetActive(exitButton, true);
     }
 
     private bool HasCameraMoved()
@@ -507,24 +323,64 @@ public class MapToSphereController : MonoBehaviour
 
     public void OnHomeButtonClick()
     {
-        // Toggle map panel
+        // Jika map sudah terlihat, sembunyikan (toggle behavior)
+        if (isMapOverlayVisible && mapPanel != null && mapPanel.activeInHierarchy)
+        {
+            HideMapOverlay();
+            return;
+        }
+        
+        // Jika map belum terlihat, tampilkan
+        isMapOverlayVisible = true;
+        
+        // Sembunyikan panel narasi jika terlihat
+        HideNaration();
+        
         if (mapPanel != null)
         {
-            bool isMapActive = !mapPanel.activeSelf;
-            mapPanel.SetActive(isMapActive);
+            mapPanel.SetActive(true);
+        }
+        
+        if (buttonPanel != null)
+        {
+            buttonPanel.SetActive(true);
             
-            // Toggle button panel with map panel
-            if (buttonPanel != null)
+            Button[] buttons = buttonPanel.GetComponentsInChildren<Button>(true);
+            foreach (Button btn in buttons)
             {
-                buttonPanel.SetActive(isMapActive);
+                btn.gameObject.SetActive(true);
+                btn.interactable = true;
+            }
+        }
+        
+        if (sphereUI != null)
+        {
+            sphereUI.SetActive(false);
+        }
+        
+        if (sphereObjects != null && sphereObjects.Length > 0)
+        {
+            bool anySphereVisible = false;
+            
+            for (int i = 0; i < sphereObjects.Length; i++)
+            {
+                if (sphereObjects[i] != null)
+                {
+                    bool shouldBeActive = (i == currentSphereIndex);
+                    sphereObjects[i].SetActive(shouldBeActive);
+                    if (shouldBeActive) anySphereVisible = true;
+                }
             }
             
-            // Hide narration panel if map is shown
-            if (isMapActive && isNarationVisible && narationPanel != null)
+            if (!anySphereVisible && sphereObjects.Length > 0 && sphereObjects[0] != null)
             {
-                narationPanel.SetActive(false);
-                isNarationVisible = false;
+                sphereObjects[0].SetActive(true);
+                currentSphereIndex = 0;
             }
+        }
+        else if (sphere != null)
+        {
+            sphere.SetActive(true);
         }
     }
 
@@ -642,48 +498,40 @@ public class MapToSphereController : MonoBehaviour
     
     public void ShowNaration()
     {
+        isNarationVisible = true;
+        
+        // Aktifkan panel narasi
         if (narationPanel != null)
         {
-            // Hide map and button panels if they are visible
-            if (mapPanel != null)
-            {
-                mapPanel.SetActive(false);
-            }
-            
-            if (buttonPanel != null)
-            {
-                buttonPanel.SetActive(false);
-            }
-            
-            if (sphereUI != null)
-            {
-                sphereUI.SetActive(false);
-            }
-            
             narationPanel.SetActive(true);
-            isNarationVisible = true;
-            
-            Debug.Log("Naration panel shown");
+        }
+        
+        // Sembunyikan panel lain
+        if (mapPanel != null)
+        {
+            mapPanel.SetActive(false);
+        }
+        
+        if (buttonPanel != null)
+        {
+            buttonPanel.SetActive(false);
+        }
+        
+        if (sphereUI != null)
+        {
+            sphereUI.SetActive(false);
         }
     }
     
     public void HideNaration()
     {
+        isNarationVisible = false;
+        
+        // Sembunyikan panel narasi
         if (narationPanel != null)
         {
             narationPanel.SetActive(false);
-            isNarationVisible = false;
         }
-    }
-
-    // Function to handle exit button click
-    public void OnExitButtonClick()
-    {
-        #if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-        #else
-        Application.Quit();
-        #endif
     }
 
     [ContextMenu("Toggle Map Overlay")]
@@ -837,36 +685,18 @@ public class MapToSphereController : MonoBehaviour
             }
         }
         
-        // // Emergency setup for exit button
-        // if (exitButton != null)
-        // {
-        //     // Hapus komponen lama jika ada
-        //     Button oldButton = exitButton.GetComponent<Button>();
-        //     if (oldButton != null)
-        //     {
-        //         DestroyImmediate(oldButton);
-        //     }
-            
-        //     // Tambahkan komponen baru
-        //     exitButtonComponent = exitButton.AddComponent<Button>();
-            
-        //     // Setup colors
-        //     ColorBlock colors = exitButtonComponent.colors;
-        //     colors.normalColor = Color.white;
-        //     colors.highlightedColor = new Color(1f, 0.5f, 0.5f, 1f);
-        //     exitButtonComponent.colors = colors;
-            
-        //     // Add event listener
-        //     exitButtonComponent.onClick.RemoveAllListeners();
-        //     exitButtonComponent.onClick.AddListener(OnExitButtonClick);
-        //     Debug.Log("Emergency setup: Exit button recreated and configured successfully");
-        // }
-
-        // Emergency setup for narration button
+        // Setup narasi button jika ada
         if (narationButton != null)
         {
             narationButton.onClick.RemoveAllListeners();
             narationButton.onClick.AddListener(ToggleNaration);
+        }
+        
+        // Setup exit button jika ada
+        if (exitButton != null)
+        {
+            exitButton.onClick.RemoveAllListeners();
+            exitButton.onClick.AddListener(ExitApplication);
         }
         
         if (mapPanel != null) mapPanel.SetActive(true);
@@ -976,34 +806,16 @@ public class MapToSphereController : MonoBehaviour
         }
         
         // Menambahkan hover animation ke exitButton
-        if (exitButton != null && exitButton.GetComponent<HoverAnimationController>() == null)
+        if (exitButton != null && exitButton.gameObject.GetComponent<HoverAnimationController>() == null)
         {
-            HoverAnimationController hoverAnim = exitButton.AddComponent<HoverAnimationController>();
+            HoverAnimationController hoverAnim = exitButton.gameObject.AddComponent<HoverAnimationController>();
             hoverAnim.useScaleAnimation = true;
             hoverAnim.hoverScaleMultiplier = 1.15f;
             hoverAnim.useColorAnimation = true;
-            // Warna merah saat hover untuk tombol exit
-            hoverAnim.hoverColor = new Color(1f, 0.5f, 0.5f, 1f);
             count++;
         }
         
         Debug.Log($"Successfully added hover animations to {count} buttons");
-        
-        // Setup hover animations for exit button
-        if (exitButtonComponent != null)
-        {
-            Color normalColor = Color.white;
-            Color hoverColor = new Color(1f, 0.3f, 0.3f); // Red hover color for exit button
-            
-            exitButtonComponent.transition = Selectable.Transition.ColorTint;
-            ColorBlock colorBlock = exitButtonComponent.colors;
-            colorBlock.normalColor = normalColor;
-            colorBlock.highlightedColor = hoverColor;
-            colorBlock.selectedColor = hoverColor;
-            colorBlock.pressedColor = new Color(hoverColor.r * 0.8f, hoverColor.g * 0.8f, hoverColor.b * 0.8f);
-            colorBlock.fadeDuration = 0.1f;
-            exitButtonComponent.colors = colorBlock;
-        }
     }
 
     [ContextMenu("Toggle Naration")]
@@ -1011,241 +823,24 @@ public class MapToSphereController : MonoBehaviour
     {
         ToggleNaration();
     }
-
-    [ContextMenu("Toggle Exit Button")]
-    private void ToggleExitButton()
+    
+    // Fungsi untuk keluar dari aplikasi
+    public void ExitApplication()
     {
-        if (exitButton != null)
-        {
-            exitButton.SetActive(!exitButton.activeSelf);
-            Debug.Log($"Exit Button is now {(exitButton.activeSelf ? "visible" : "hidden")}");
-        }
+        Debug.Log("Exit application requested");
+        
+        #if UNITY_EDITOR
+            // Dalam Unity Editor, hentikan Play mode
+            UnityEditor.EditorApplication.isPlaying = false;
+        #else
+            // Dalam build aplikasi, keluar dari aplikasi
+            Application.Quit();
+        #endif
     }
-
-    [ContextMenu("Debug UI Status")]
-    private void DebugUIStatus()
+    
+    [ContextMenu("Exit Application")]
+    private void DebugExitApplication()
     {
-        string status = "UI Status:\n";
-        
-        if (mapPanel != null)
-            status += $"Map Panel: {(mapPanel.activeSelf ? "Visible" : "Hidden")}\n";
-        
-        if (buttonPanel != null)
-            status += $"Button Panel: {(buttonPanel.activeSelf ? "Visible" : "Hidden")}\n";
-        
-        if (narationPanel != null)
-            status += $"Narration Panel: {(narationPanel.activeSelf ? "Visible" : "Hidden")}\n";
-        
-        if (exitButton != null)
-            status += $"Exit Button: {(exitButton.activeSelf ? "Visible" : "Hidden")}\n";
-        
-        if (sphereUI != null)
-            status += $"Sphere UI: {(sphereUI.activeSelf ? "Visible" : "Hidden")}\n";
-        
-        for (int i = 0; i < sphereObjects.Length; i++)
-        {
-            if (sphereObjects[i] != null)
-                status += $"Sphere {i}: {(sphereObjects[i].activeSelf ? "Visible" : "Hidden")}\n";
-        }
-        
-        Debug.Log(status);
-    }
-
-    [ContextMenu("Fix Exit Button")]
-    private void FixExitButton()
-    {
-        if (exitButton == null)
-        {
-            Debug.LogError("Exit button reference is null! Cannot fix.");
-            return;
-        }
-        
-        // Hapus komponen lama jika ada
-        Button oldButton = exitButton.GetComponent<Button>();
-        if (oldButton != null)
-        {
-            DestroyImmediate(oldButton);
-            Debug.Log("Removed old Button component");
-        }
-        
-        // Tambahkan komponen baru
-        exitButtonComponent = exitButton.AddComponent<Button>();
-        Debug.Log("Added new Button component to Exit Button");
-        
-        // Setup event
-        exitButtonComponent.onClick.RemoveAllListeners();
-        exitButtonComponent.onClick.AddListener(OnExitButtonClick);
-        
-        // Setup hover colors
-        ColorBlock colors = exitButtonComponent.colors;
-        colors.normalColor = Color.white;
-        colors.highlightedColor = new Color(1f, 0.5f, 0.5f, 1f);
-        colors.selectedColor = new Color(1f, 0.5f, 0.5f, 1f);
-        colors.pressedColor = new Color(0.8f, 0.3f, 0.3f, 1f);
-        exitButtonComponent.colors = colors;
-        
-        // Pastikan tombol aktif
-        exitButton.SetActive(true);
-        
-        // Tambahkan hover animation
-        HoverAnimationController hoverAnim = exitButton.GetComponent<HoverAnimationController>();
-        if (hoverAnim == null)
-        {
-            hoverAnim = exitButton.AddComponent<HoverAnimationController>();
-            hoverAnim.useScaleAnimation = true;
-            hoverAnim.hoverScaleMultiplier = 1.15f;
-            hoverAnim.useColorAnimation = true;
-            hoverAnim.hoverColor = new Color(1f, 0.5f, 0.5f, 1f);
-        }
-        
-        // Update posisi
-        UpdateExitButtonPosition();
-        
-        Debug.Log("Exit Button has been fixed and configured!");
-    }
-
-    [ContextMenu("Update Exit Button Position")]
-    private void UpdateExitButtonPosition()
-    {
-        if (exitButton == null)
-        {
-            Debug.LogError("Exit button reference is null!");
-            return;
-        }
-        
-        RectTransform rt = exitButton.GetComponent<RectTransform>();
-        if (rt == null)
-        {
-            Debug.LogError("Exit button doesn't have RectTransform!");
-            return;
-        }
-        
-        // Posisi di kanan atas
-        rt.anchorMin = new Vector2(1, 1);
-        rt.anchorMax = new Vector2(1, 1);
-        rt.pivot = new Vector2(1, 1);
-        
-        // Atur posisi dan ukuran berdasarkan variabel yang bisa diubah di Inspector
-        rt.anchoredPosition = new Vector2(exitButtonX, exitButtonY);
-        rt.sizeDelta = exitButtonSize;
-        
-        // Pastikan terlihat
-        exitButton.SetActive(true);
-        
-        Debug.Log($"Exit Button position updated: Pos({exitButtonX}, {exitButtonY}), Size({exitButtonSize.x}, {exitButtonSize.y})");
-    }
-
-    [ContextMenu("Create Complete Exit Button")]
-    private void CreateCompleteExitButton()
-    {
-        // Cari Canvas
-        Canvas canvas = FindObjectOfType<Canvas>();
-        if (canvas == null)
-        {
-            Debug.LogError("No Canvas found in scene!");
-            return;
-        }
-        
-        // Hapus button lama jika ada
-        if (exitButton != null)
-        {
-            DestroyImmediate(exitButton);
-        }
-        
-        // Buat GameObject baru
-        exitButton = new GameObject("ExitButton");
-        exitButton.transform.SetParent(canvas.transform, false);
-        
-        // Tambahkan komponen
-        RectTransform rt = exitButton.AddComponent<RectTransform>();
-        Image img = exitButton.AddComponent<Image>();
-        exitButtonComponent = exitButton.AddComponent<Button>();
-        
-        // Setup posisi
-        rt.anchorMin = new Vector2(1, 1);
-        rt.anchorMax = new Vector2(1, 1);
-        rt.pivot = new Vector2(1, 1);
-        rt.anchoredPosition = new Vector2(exitButtonX, exitButtonY);
-        rt.sizeDelta = exitButtonSize;
-        
-        // Setup visual
-        img.color = Color.white;
-        
-        // Setup teks
-        GameObject textObj = new GameObject("Text");
-        textObj.transform.SetParent(exitButton.transform, false);
-        
-        RectTransform textRT = textObj.AddComponent<RectTransform>();
-        textRT.anchorMin = Vector2.zero;
-        textRT.anchorMax = Vector2.one;
-        textRT.offsetMin = Vector2.zero;
-        textRT.offsetMax = Vector2.zero;
-        
-        // Gunakan TextMeshProUGUI jika ada di project
-        TextMeshProUGUI exitText = textObj.AddComponent<TextMeshProUGUI>();
-        exitText.text = "EXIT";
-        exitText.fontSize = 18;
-        exitText.alignment = TextAlignmentOptions.Center;
-        exitText.color = Color.black;
-        
-        // Setup fungsi
-        exitButtonComponent.onClick.AddListener(OnExitButtonClick);
-        
-        // Setup colors
-        ColorBlock colors = exitButtonComponent.colors;
-        colors.normalColor = Color.white;
-        colors.highlightedColor = new Color(1f, 0.5f, 0.5f, 1f);
-        exitButtonComponent.colors = colors;
-        
-        Debug.Log("Complete Exit Button created successfully!");
-        
-        // Tambahkan hover animation
-        HoverAnimationController hoverAnim = exitButton.AddComponent<HoverAnimationController>();
-        hoverAnim.useScaleAnimation = true;
-        hoverAnim.hoverScaleMultiplier = 1.15f;
-        hoverAnim.useColorAnimation = true;
-        hoverAnim.hoverColor = new Color(1f, 0.5f, 0.5f, 1f);
-    }
-
-    [ContextMenu("Move Exit Button Up")]
-    private void MoveExitButtonUp()
-    {
-        exitButtonY -= 10f;
-        UpdateExitButtonPosition();
-    }
-
-    [ContextMenu("Move Exit Button Down")]
-    private void MoveExitButtonDown()
-    {
-        exitButtonY += 10f;
-        UpdateExitButtonPosition();
-    }
-
-    [ContextMenu("Move Exit Button Left")]
-    private void MoveExitButtonLeft()
-    {
-        exitButtonX -= 10f;
-        UpdateExitButtonPosition();
-    }
-
-    [ContextMenu("Move Exit Button Right")]
-    private void MoveExitButtonRight()
-    {
-        exitButtonX += 10f;
-        UpdateExitButtonPosition();
-    }
-
-    [ContextMenu("Make Exit Button Bigger")]
-    private void MakeExitButtonBigger()
-    {
-        exitButtonSize = new Vector2(exitButtonSize.x + 10f, exitButtonSize.y + 10f);
-        UpdateExitButtonPosition();
-    }
-
-    [ContextMenu("Make Exit Button Smaller")]
-    private void MakeExitButtonSmaller()
-    {
-        exitButtonSize = new Vector2(Mathf.Max(20f, exitButtonSize.x - 10f), Mathf.Max(20f, exitButtonSize.y - 10f));
-        UpdateExitButtonPosition();
+        ExitApplication();
     }
 }
