@@ -51,7 +51,7 @@ Melalui tur virtual ini, pengguna diharapkan dapat:
 | 7   | **International Student Center** |
 | 8   | **Masjid Al-Hurriyyah Lt.1**     |
 | 9   | **Masjid Al-Hurriyyah Lt.2**     |
-| 10  | **Parkiran Al-Hurriyyah**        |
+| 10  | **Parkiran Masjid Al-Hurriyyah**        |
 | 11  | **Gedung SATARI**                |
 
 ---
