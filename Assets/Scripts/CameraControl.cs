@@ -11,7 +11,6 @@ public class CameraControl : MonoBehaviour
     
     private void OnEnable()
     {
-        // Subscribe to input events if using new Input System
         if (Mouse.current != null)
         {
             Mouse.current.delta.ReadValue();
@@ -20,7 +19,6 @@ public class CameraControl : MonoBehaviour
 
     void Update()
     {
-        // New Input System compatible
         Vector2 mouseInput = Vector2.zero;
         
         if (Mouse.current != null)
@@ -29,7 +27,6 @@ public class CameraControl : MonoBehaviour
         }
         else
         {
-            // Fallback to legacy input
             try
             {
                 mouseInput.x = Input.GetAxis("Mouse X");
@@ -37,12 +34,11 @@ public class CameraControl : MonoBehaviour
             }
             catch
             {
-                // Input system not available
                 return;
             }
         }
 
-        yaw += mouseInput.x * rotationSpeed * Time.deltaTime * 60f; // Frame rate independent
+        yaw += mouseInput.x * rotationSpeed * Time.deltaTime * 60f;
         pitch -= mouseInput.y * rotationSpeed * Time.deltaTime * 60f;
         pitch = Mathf.Clamp(pitch, -80f, 80f);
 
