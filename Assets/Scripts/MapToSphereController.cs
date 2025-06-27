@@ -8,6 +8,11 @@ public class MapToSphereController : MonoBehaviour
     public GameObject mapPanel;
     public GameObject buttonPanel;
     public GameObject sphereUI;
+    
+    [Header("Narration System")]
+    public GameObject narationPanel;
+    public Button narationButton;
+    private bool isNarationVisible = false;
 
     [Header("Sphere Settings")]
     public GameObject sphere;
@@ -71,6 +76,9 @@ public class MapToSphereController : MonoBehaviour
             
             InitializeApp();
             Invoke("VerifyButtonsSetup", 0.5f);
+            
+            // Tampilkan narasi saat aplikasi dimulai
+            ShowNaration();
         }
         catch (System.Exception e)
         {
@@ -89,6 +97,13 @@ public class MapToSphereController : MonoBehaviour
                 homeButtonComponent.onClick.RemoveAllListeners();
                 homeButtonComponent.onClick.AddListener(OnHomeButtonClick);
             }
+        }
+        
+        // Verifikasi narasi button
+        if (narationButton != null)
+        {
+            narationButton.onClick.RemoveAllListeners();
+            narationButton.onClick.AddListener(ToggleNaration);
         }
         
         if (buttonPanel != null && buttonPanel.activeInHierarchy)
@@ -161,6 +176,13 @@ public class MapToSphereController : MonoBehaviour
                 playPauseButtonComponent.onClick.AddListener(OnPlayPauseClick);
             }
         }
+        
+        // Setup event untuk naration button (toggle)
+        if (narationButton != null)
+        {
+            narationButton.onClick.RemoveAllListeners();
+            narationButton.onClick.AddListener(ToggleNaration);
+        }
     }
 
     private void InitializeApp()
@@ -182,6 +204,12 @@ public class MapToSphereController : MonoBehaviour
             currentMaterialIndex = 0;
         }
 
+        // Sembunyikan narasi saat inisialisasi (akan ditampilkan di Start())
+        if (narationPanel != null)
+        {
+            narationPanel.SetActive(false);
+        }
+        
         ShowMapOverlay();
         UpdatePlayPauseButton();
         SetupFloatingButtons();
@@ -215,8 +243,12 @@ public class MapToSphereController : MonoBehaviour
         if (mapPanel != null) mapPanel.SetActive(true);
     }
 
+    // Pastikan sphereUI tersembunyi saat narasi ditampilkan
     public void OnButtonClick(int sphereIndex)
     {
+        // Sembunyikan narasi panel jika terbuka
+        HideNaration();
+        
         if (sphereObjects == null || sphereObjects.Length == 0)
         {
             SetupTestSpheres();
@@ -274,7 +306,18 @@ public class MapToSphereController : MonoBehaviour
 
     public void OnHomeButtonClick()
     {
+        // Jika map sudah terlihat, sembunyikan (toggle behavior)
+        if (isMapOverlayVisible && mapPanel != null && mapPanel.activeInHierarchy)
+        {
+            HideMapOverlay();
+            return;
+        }
+        
+        // Jika map belum terlihat, tampilkan
         isMapOverlayVisible = true;
+        
+        // Sembunyikan panel narasi jika terlihat
+        HideNaration();
         
         if (mapPanel != null)
         {
@@ -423,6 +466,57 @@ public class MapToSphereController : MonoBehaviour
         }
     }
 
+    // Fungsi untuk mengelola panel narasi
+    public void ToggleNaration()
+    {
+        if (isNarationVisible)
+        {
+            HideNaration();
+        }
+        else
+        {
+            ShowNaration();
+        }
+    }
+    
+    public void ShowNaration()
+    {
+        isNarationVisible = true;
+        
+        // Aktifkan panel narasi
+        if (narationPanel != null)
+        {
+            narationPanel.SetActive(true);
+        }
+        
+        // Sembunyikan panel lain
+        if (mapPanel != null)
+        {
+            mapPanel.SetActive(false);
+        }
+        
+        if (buttonPanel != null)
+        {
+            buttonPanel.SetActive(false);
+        }
+        
+        if (sphereUI != null)
+        {
+            sphereUI.SetActive(false);
+        }
+    }
+    
+    public void HideNaration()
+    {
+        isNarationVisible = false;
+        
+        // Sembunyikan panel narasi
+        if (narationPanel != null)
+        {
+            narationPanel.SetActive(false);
+        }
+    }
+
     [ContextMenu("Toggle Map Overlay")]
     private void DebugToggleMapOverlay()
     {
@@ -516,6 +610,8 @@ public class MapToSphereController : MonoBehaviour
     {
         Debug.Log("=== UI STATE DEBUG ===");
         Debug.Log($"isMapOverlayVisible: {isMapOverlayVisible}");
+        Debug.Log($"isNarationVisible: {isNarationVisible}");
+        Debug.Log($"narationPanel: {(narationPanel == null ? "NULL" : $"Active: {narationPanel.activeInHierarchy}")}");
         Debug.Log($"mapPanel: {(mapPanel == null ? "NULL" : $"Active: {mapPanel.activeInHierarchy}")}");
         Debug.Log($"buttonPanel: {(buttonPanel == null ? "NULL" : $"Active: {buttonPanel.activeInHierarchy}")}");
         Debug.Log($"sphere: {(sphere == null ? "NULL" : $"Active: {sphere.activeInHierarchy}")}");
@@ -572,9 +668,18 @@ public class MapToSphereController : MonoBehaviour
             }
         }
         
+        // Setup narasi button jika ada
+        if (narationButton != null)
+        {
+            narationButton.onClick.RemoveAllListeners();
+            narationButton.onClick.AddListener(ToggleNaration);
+        }
+        
         if (mapPanel != null) mapPanel.SetActive(true);
         if (buttonPanel != null) buttonPanel.SetActive(true);
         if (sphereUI != null) sphereUI.SetActive(false);
+        if (narationPanel != null) narationPanel.SetActive(false);
+        isNarationVisible = false;
         
         if (buttonPanel != null)
         {
@@ -646,6 +751,7 @@ public class MapToSphereController : MonoBehaviour
             }
         }
         
+        // Menambahkan hover animation ke homeButton
         if (homeButton != null && homeButton.GetComponent<HoverAnimationController>() == null)
         {
             HoverAnimationController hoverAnim = homeButton.AddComponent<HoverAnimationController>();
@@ -655,6 +761,7 @@ public class MapToSphereController : MonoBehaviour
             count++;
         }
         
+        // Menambahkan hover animation ke playPauseButton
         if (playPauseButton != null && playPauseButton.GetComponent<HoverAnimationController>() == null)
         {
             HoverAnimationController hoverAnim = playPauseButton.AddComponent<HoverAnimationController>();
@@ -664,6 +771,22 @@ public class MapToSphereController : MonoBehaviour
             count++;
         }
         
+        // Menambahkan hover animation ke narationButton
+        if (narationButton != null && narationButton.gameObject.GetComponent<HoverAnimationController>() == null)
+        {
+            HoverAnimationController hoverAnim = narationButton.gameObject.AddComponent<HoverAnimationController>();
+            hoverAnim.useScaleAnimation = true;
+            hoverAnim.hoverScaleMultiplier = 1.15f;
+            hoverAnim.useColorAnimation = true;
+            count++;
+        }
+        
         Debug.Log($"Successfully added hover animations to {count} buttons");
+    }
+
+    [ContextMenu("Toggle Naration")]
+    private void DebugToggleNaration()
+    {
+        ToggleNaration();
     }
 }
