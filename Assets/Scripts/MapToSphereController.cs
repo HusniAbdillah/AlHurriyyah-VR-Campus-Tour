@@ -610,4 +610,60 @@ public class MapToSphereController : MonoBehaviour
             currentSphereIndex = 0;
         }
     }
+
+    [ContextMenu("Setup Hover Animations")]
+    private void SetupHoverAnimations()
+    {
+        if (buttonPanel == null)
+        {
+            Debug.LogError("Button panel is not assigned!");
+            return;
+        }
+        
+        Button[] buttons = buttonPanel.GetComponentsInChildren<Button>(true);
+        int count = 0;
+        
+        foreach (Button btn in buttons)
+        {
+            if (btn == null) continue;
+            
+            HoverAnimationController hoverAnim = btn.gameObject.GetComponent<HoverAnimationController>();
+            if (hoverAnim == null)
+            {
+                hoverAnim = btn.gameObject.AddComponent<HoverAnimationController>();
+                
+                hoverAnim.useScaleAnimation = true;
+                hoverAnim.hoverScaleMultiplier = 1.1f;
+                hoverAnim.scaleDuration = 0.15f;
+                
+                hoverAnim.useColorAnimation = true;
+                hoverAnim.hoverColor = new Color(1f, 1f, 1f, 1f);
+                hoverAnim.colorDuration = 0.15f;
+                
+                hoverAnim.useRotationAnimation = false;
+                
+                count++;
+            }
+        }
+        
+        if (homeButton != null && homeButton.GetComponent<HoverAnimationController>() == null)
+        {
+            HoverAnimationController hoverAnim = homeButton.AddComponent<HoverAnimationController>();
+            hoverAnim.useScaleAnimation = true;
+            hoverAnim.hoverScaleMultiplier = 1.15f;
+            hoverAnim.useColorAnimation = true;
+            count++;
+        }
+        
+        if (playPauseButton != null && playPauseButton.GetComponent<HoverAnimationController>() == null)
+        {
+            HoverAnimationController hoverAnim = playPauseButton.AddComponent<HoverAnimationController>();
+            hoverAnim.useScaleAnimation = true;
+            hoverAnim.hoverScaleMultiplier = 1.15f;
+            hoverAnim.useColorAnimation = true;
+            count++;
+        }
+        
+        Debug.Log($"Successfully added hover animations to {count} buttons");
+    }
 }

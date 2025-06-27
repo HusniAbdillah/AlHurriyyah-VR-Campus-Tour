@@ -3089,6 +3089,7 @@ GameObject:
   - component: {fileID: 353384491}
   - component: {fileID: 353384490}
   - component: {fileID: 353384489}
+  - component: {fileID: 353384492}
   m_Layer: 5
   m_Name: ButtonPanel
   m_TagString: Untagged
@@ -3190,6 +3191,27 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 353384487}
   m_CullTransparentMesh: 1
+--- !u!114 &353384492
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 353384487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36c66566c04252b49b36d5e9a7ac3eb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useScaleAnimation: 1
+  hoverScaleMultiplier: 1.1
+  scaleDuration: 0.2
+  useColorAnimation: 1
+  hoverColor: {r: 0.690566, g: 0.690566, b: 0.690566, a: 1}
+  colorDuration: 0.2
+  useRotationAnimation: 0
+  rotationAmount: 5
+  rotationDuration: 0.2
 --- !u!1001 &358224100
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4704,6 +4726,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 5
+--- !u!114 &469405184
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 469405173}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c49b4cc203aa6414fae5c798d1d0e7d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_EventMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_MaxRayIntersections: 1
 --- !u!1 &471479206
 GameObject:
   m_ObjectHideFlags: 0
@@ -11857,6 +11895,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1182930543}
   - component: {fileID: 1182930544}
+  - component: {fileID: 1182930545}
   m_Layer: 5
   m_Name: HomeButton
   m_TagString: Untagged
@@ -11882,7 +11921,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -42, y: -71.86}
+  m_AnchoredPosition: {x: -47, y: -75.5}
   m_SizeDelta: {x: 100, y: 70}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1182930544
@@ -11893,6 +11932,27 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1182930542}
   m_CullTransparentMesh: 0
+--- !u!114 &1182930545
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1182930542}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36c66566c04252b49b36d5e9a7ac3eb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useScaleAnimation: 1
+  hoverScaleMultiplier: 1.1
+  scaleDuration: 0.2
+  useColorAnimation: 1
+  hoverColor: {r: 0.5018867, g: 0.5018867, b: 0.5018867, a: 1}
+  colorDuration: 0.2
+  useRotationAnimation: 0
+  rotationAmount: 5
+  rotationDuration: 0.2
 --- !u!1 &1185129091
 GameObject:
   m_ObjectHideFlags: 0
@@ -16847,6 +16907,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1729618553}
+  - component: {fileID: 1729618554}
   m_Layer: 5
   m_Name: PlayPauseButton
   m_TagString: Untagged
@@ -16872,9 +16933,30 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -105.4, y: 135.3}
+  m_AnchoredPosition: {x: -112.5, y: 135.3}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1729618554
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1729618552}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36c66566c04252b49b36d5e9a7ac3eb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useScaleAnimation: 1
+  hoverScaleMultiplier: 1.1
+  scaleDuration: 0.2
+  useColorAnimation: 1
+  hoverColor: {r: 0.6603774, g: 0.6603774, b: 0.6603774, a: 1}
+  colorDuration: 0.2
+  useRotationAnimation: 0
+  rotationAmount: 5
+  rotationDuration: 0.2
 --- !u!1 &1743831092
 GameObject:
   m_ObjectHideFlags: 0
@@ -22802,6 +22884,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7277802327414017194, guid: 77e7c27b2c5525e4aa8cc9f99d654486, type: 3}
       insertIndex: -1
       addedObject: {fileID: 469405179}
+    - targetCorrespondingSourceObject: {fileID: 7277802327414017194, guid: 77e7c27b2c5525e4aa8cc9f99d654486, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 469405184}
   m_SourcePrefab: {fileID: 100100000, guid: 77e7c27b2c5525e4aa8cc9f99d654486, type: 3}
 --- !u!1001 &3257631069116033653
 PrefabInstance:
