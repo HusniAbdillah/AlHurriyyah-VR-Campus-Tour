@@ -79,8 +79,6 @@ public class MapToSphereController : MonoBehaviour
             
             InitializeApp();
             Invoke("VerifyButtonsSetup", 0.5f);
-            
-            // Tampilkan narasi saat aplikasi dimulai
             ShowNaration();
         }
         catch (System.Exception e)
@@ -102,14 +100,12 @@ public class MapToSphereController : MonoBehaviour
             }
         }
         
-        // Verifikasi narasi button
         if (narationButton != null)
         {
             narationButton.onClick.RemoveAllListeners();
             narationButton.onClick.AddListener(ToggleNaration);
         }
         
-        // Verifikasi exit button
         if (exitButton != null)
         {
             exitButton.onClick.RemoveAllListeners();
@@ -187,14 +183,12 @@ public class MapToSphereController : MonoBehaviour
             }
         }
         
-        // Setup event untuk naration button (toggle)
         if (narationButton != null)
         {
             narationButton.onClick.RemoveAllListeners();
             narationButton.onClick.AddListener(ToggleNaration);
         }
         
-        // Setup event untuk exit button
         if (exitButton != null)
         {
             exitButton.onClick.RemoveAllListeners();
@@ -221,7 +215,6 @@ public class MapToSphereController : MonoBehaviour
             currentMaterialIndex = 0;
         }
 
-        // Sembunyikan narasi saat inisialisasi (akan ditampilkan di Start())
         if (narationPanel != null)
         {
             narationPanel.SetActive(false);
@@ -260,10 +253,8 @@ public class MapToSphereController : MonoBehaviour
         if (mapPanel != null) mapPanel.SetActive(true);
     }
 
-    // Pastikan sphereUI tersembunyi saat narasi ditampilkan
     public void OnButtonClick(int sphereIndex)
     {
-        // Sembunyikan narasi panel jika terbuka
         HideNaration();
         
         if (sphereObjects == null || sphereObjects.Length == 0)
@@ -323,17 +314,14 @@ public class MapToSphereController : MonoBehaviour
 
     public void OnHomeButtonClick()
     {
-        // Jika map sudah terlihat, sembunyikan (toggle behavior)
         if (isMapOverlayVisible && mapPanel != null && mapPanel.activeInHierarchy)
         {
             HideMapOverlay();
             return;
         }
         
-        // Jika map belum terlihat, tampilkan
         isMapOverlayVisible = true;
         
-        // Sembunyikan panel narasi jika terlihat
         HideNaration();
         
         if (mapPanel != null)
@@ -483,7 +471,6 @@ public class MapToSphereController : MonoBehaviour
         }
     }
 
-    // Fungsi untuk mengelola panel narasi
     public void ToggleNaration()
     {
         if (isNarationVisible)
@@ -500,13 +487,11 @@ public class MapToSphereController : MonoBehaviour
     {
         isNarationVisible = true;
         
-        // Aktifkan panel narasi
         if (narationPanel != null)
         {
             narationPanel.SetActive(true);
         }
         
-        // Sembunyikan panel lain
         if (mapPanel != null)
         {
             mapPanel.SetActive(false);
@@ -527,7 +512,6 @@ public class MapToSphereController : MonoBehaviour
     {
         isNarationVisible = false;
         
-        // Sembunyikan panel narasi
         if (narationPanel != null)
         {
             narationPanel.SetActive(false);
@@ -685,14 +669,12 @@ public class MapToSphereController : MonoBehaviour
             }
         }
         
-        // Setup narasi button jika ada
         if (narationButton != null)
         {
             narationButton.onClick.RemoveAllListeners();
             narationButton.onClick.AddListener(ToggleNaration);
         }
         
-        // Setup exit button jika ada
         if (exitButton != null)
         {
             exitButton.onClick.RemoveAllListeners();
@@ -775,7 +757,6 @@ public class MapToSphereController : MonoBehaviour
             }
         }
         
-        // Menambahkan hover animation ke homeButton
         if (homeButton != null && homeButton.GetComponent<HoverAnimationController>() == null)
         {
             HoverAnimationController hoverAnim = homeButton.AddComponent<HoverAnimationController>();
@@ -785,7 +766,6 @@ public class MapToSphereController : MonoBehaviour
             count++;
         }
         
-        // Menambahkan hover animation ke playPauseButton
         if (playPauseButton != null && playPauseButton.GetComponent<HoverAnimationController>() == null)
         {
             HoverAnimationController hoverAnim = playPauseButton.AddComponent<HoverAnimationController>();
@@ -795,7 +775,6 @@ public class MapToSphereController : MonoBehaviour
             count++;
         }
         
-        // Menambahkan hover animation ke narationButton
         if (narationButton != null && narationButton.gameObject.GetComponent<HoverAnimationController>() == null)
         {
             HoverAnimationController hoverAnim = narationButton.gameObject.AddComponent<HoverAnimationController>();
@@ -805,7 +784,6 @@ public class MapToSphereController : MonoBehaviour
             count++;
         }
         
-        // Menambahkan hover animation ke exitButton
         if (exitButton != null && exitButton.gameObject.GetComponent<HoverAnimationController>() == null)
         {
             HoverAnimationController hoverAnim = exitButton.gameObject.AddComponent<HoverAnimationController>();
@@ -827,13 +805,9 @@ public class MapToSphereController : MonoBehaviour
     // Fungsi untuk keluar dari aplikasi
     public void ExitApplication()
     {
-        Debug.Log("Exit application requested");
-        
         #if UNITY_EDITOR
-            // Dalam Unity Editor, hentikan Play mode
             UnityEditor.EditorApplication.isPlaying = false;
         #else
-            // Dalam build aplikasi, keluar dari aplikasi
             Application.Quit();
         #endif
     }
