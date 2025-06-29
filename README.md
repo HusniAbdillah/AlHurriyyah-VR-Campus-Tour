@@ -9,10 +9,13 @@ Topik yang diangkat adalah _pengembangan simulasi VR 360°_ untuk membantu pengu
 
 ## 📽 Video + Demo
 
-Video dokumentasi proyek dapat diakses melalui tautan berikut:  
+Video presentasi proyek:  
 [ipb.link/video-vr-gkvk3p3](https://ipb.link/video-vr-gkvk3p3)
 
-💻 Website demo proyek (langsung eksplorasi via browser):  
+Video demo proyek (Unity):
+https://github.com/HusniAbdillah/AlHurriyyah-VR-Campus-Tour/issues/1#issue-3186362051
+
+Website demo proyek:  
 [explore-alhurriyah-vr.vercel.app](https://explore-alhurriyah-vr.vercel.app/)
 
 ---
