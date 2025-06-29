@@ -13,7 +13,7 @@ Video presentasi proyek:
 [ipb.link/video-vr-gkvk3p3](https://ipb.link/video-vr-gkvk3p3)
 
 Video demo proyek (Unity):
-https://github.com/HusniAbdillah/AlHurriyyah-VR-Campus-Tour/issues/1#issue-3186362051
+<video src="https://github.com/user-attachments/assets/2a269858-39e7-4016-8c9d-f7a53e3d9377" controls width="600"></video>
 
 Website demo proyek:  
 [explore-alhurriyah-vr.vercel.app](https://explore-alhurriyah-vr.vercel.app/)
